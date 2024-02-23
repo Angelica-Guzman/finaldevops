@@ -38,7 +38,7 @@ resource "aws_ecs_service" "ecs_service" {
 
   network_configuration {
     subnets          = [aws_subnet.subnet1.id, aws_subnet.subnet2.id]
-    assign_public_ip = false
+    assign_public_ip = true
     security_groups  = [aws_security_group.ecs_sg.id]
   }
 
@@ -129,7 +129,7 @@ resource "aws_iam_role_policy_attachment" "ecsTaskExecutionRole_policy" {
   role       = aws_iam_role.ecsTaskExecutionRole.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
 }
-
+98
 resource "aws_iam_role" "ecsTaskRole" {
   name               = "ecsTaskRole"
   assume_role_policy = data.aws_iam_policy_document.assume_role_policy.json
