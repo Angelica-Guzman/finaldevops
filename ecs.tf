@@ -9,7 +9,7 @@ resource "aws_ecs_task_definition" "task_definition" {
       {
         "name" : "sange-container",
         "image" : "654654553207.dkr.ecr.us-east-1.amazonaws.com/ecr-sandra:latest",
-        "entryPoint" : ["/"],
+        "entryPoint" : [],
         "essential" : true,
         "networkMode" : "awsvpc",
         "portMappings" : [
