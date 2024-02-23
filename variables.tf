@@ -25,5 +25,5 @@ variable "s3_to_cloudfront" {
 variable "container_port" {
   description = "container port"
   type        = number
-  default     = 8080
+  default     = 80
 }
