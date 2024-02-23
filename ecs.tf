@@ -1,13 +1,13 @@
 resource "aws_ecs_cluster" "ecs_cluster" {
-  name = "dette-ecs-cluster"
+  name = "sange-ecs-cluster"
 }
 
 resource "aws_ecs_task_definition" "task_definition" {
-  family = "dette-docker-family"
+  family = "sange-docker-family"
   container_definitions = jsonencode(
     [
       {
-        "name" : "dette-container",
+        "name" : "sange-container",
         "image" : "654654553207.dkr.ecr.us-east-1.amazonaws.com/ecr-sandra:latest",
         "entryPoint" : []
         "essential" : true,
@@ -30,7 +30,7 @@ resource "aws_ecs_task_definition" "task_definition" {
 }
 
 resource "aws_ecs_service" "ecs_service" {
-  name                = "dette-ecs-service"
+  name                = "sange-ecs-service"
   cluster             = aws_ecs_cluster.ecs_cluster.arn
   task_definition     = aws_ecs_task_definition.task_definition.arn
   launch_type         = "FARGATE"
@@ -44,14 +44,14 @@ resource "aws_ecs_service" "ecs_service" {
 
   load_balancer {
     target_group_arn = aws_lb_target_group.target_group.arn
-    container_name   = "dette-container"
+    container_name   = "sange-container"
     container_port   = var.container_port
   }
   depends_on = [aws_lb_listener.listener]
 }
 
 resource "aws_alb" "application_load_balancer" {
-  name               = "dette-alb"
+  name               = "sange-alb"
   internal           = false
   load_balancer_type = "application"
   subnets            = [aws_subnet.subnet1.id, aws_subnet.subnet2.id]
@@ -59,7 +59,7 @@ resource "aws_alb" "application_load_balancer" {
 }
 
 resource "aws_lb_target_group" "target_group" {
-  name        = "dette-tg"
+  name        = "sange-tg"
   port        = var.container_port
   protocol    = "HTTP"
   target_type = "ip"
@@ -78,7 +78,7 @@ resource "aws_lb_listener" "listener" {
 
 resource "aws_security_group" "ecs_sg" {
   vpc_id                 = aws_vpc.my_vpc.id
-  name                   = "dette-sg-ecs"
+  name                   = "sange-sg-ecs"
   description            = "Security group for ecs app"
   revoke_rules_on_delete = true
 }
@@ -95,7 +95,7 @@ resource "aws_security_group_rule" "ecs_alb_ingress" {
 
 resource "aws_security_group" "alb_sg" {
   vpc_id                 = aws_vpc.my_vpc.id
-  name                   = "dette-sg-alb"
+  name                   = "sange-sg-alb"
   description            = "Security group for alb"
   revoke_rules_on_delete = true
 }
@@ -111,7 +111,7 @@ resource "aws_security_group_rule" "alb_http_ingress" {
 }
 
 resource "aws_iam_role" "ecsTaskExecutionRole" {
-  name               = "dette-app-ecsTaskExecutionRole"
+  name               = "sange-app-ecsTaskExecutionRole"
   assume_role_policy = data.aws_iam_policy_document.assume_role_policy.json
 }
 
