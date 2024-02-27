@@ -1,0 +1,24 @@
+name: terraform-destroy
+
+on: [workflow_dispatch]
+
+jobs: 
+  terraformapply:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Configure AWS Credentials For GitHub Actions
+      uses: aws-actions/configure-aws-credentials@v2
+      with:
+        aws-access-key-id: ${{ secrets.ACCESS_KEY_AWS }}
+        aws-secret-access-key: ${{ secrets.SECRET_KEY_AWS }}
+        aws-region: us-east-1
+    - name: Login to Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v1
+      with:
+        mask-password: 'true'
+    - name: run-terraformdestroy
+      run: |
+        terraform init
+        terraform destroy -auto-approve
