@@ -9,8 +9,6 @@ resource "aws_ecs_task_definition" "task_definition" {
       {
         "name" : "sange-container",
         "image" : "654654553207.dkr.ecr.us-east-1.amazonaws.com/ecr-sandra:latest",
-        "entryPoint" : [],
-        "essential" : true,
         "networkMode" : "awsvpc",
         "portMappings" : [
           {
@@ -23,18 +21,19 @@ resource "aws_ecs_task_definition" "task_definition" {
   )
   requires_compatibilities = ["FARGATE"]
   network_mode             = "awsvpc"
-  cpu                      = 256
-  memory                   = 512
+  cpu                      = "256"
+  memory                   = "512"
   execution_role_arn       = aws_iam_role.ecsTaskExecutionRole.arn
   task_role_arn            = aws_iam_role.ecsTaskRole.arn
 }
 
 resource "aws_ecs_service" "ecs_service" {
-  name                = "sange-ecs-service"
-  cluster             = aws_ecs_cluster.ecs_cluster.arn
-  task_definition     = aws_ecs_task_definition.task_definition.arn
-  launch_type         = "FARGATE"
-  desired_count       = 2
+  name            = "sange-ecs-service"
+  cluster         = aws_ecs_cluster.ecs_cluster.arn
+  task_definition = aws_ecs_task_definition.task_definition.arn
+  launch_type     = "FARGATE"
+  desired_count   = 2
+  depends_on      = [aws_lb_listener.listener]
 
   network_configuration {
     subnets          = [aws_subnet.subnet1.id, aws_subnet.subnet2.id]
@@ -47,10 +46,9 @@ resource "aws_ecs_service" "ecs_service" {
     container_name   = "sange-container"
     container_port   = var.container_port
   }
-  depends_on = [aws_lb_listener.listener]
 }
 
-resource "aws_alb" "application_load_balancer" {
+resource "aws_lb" "application_load_balancer" {
   name               = "sange-alb"
   internal           = false
   load_balancer_type = "application"
@@ -67,7 +65,7 @@ resource "aws_lb_target_group" "target_group" {
 }
 
 resource "aws_lb_listener" "listener" {
-  load_balancer_arn = aws_alb.application_load_balancer.arn
+  load_balancer_arn = aws_lb.application_load_balancer.arn
   port              = var.container_port
   protocol          = "HTTP"
   default_action {
@@ -81,26 +79,18 @@ resource "aws_security_group" "ecs_sg" {
   name                   = "sange-sg-ecs"
   description            = "Security group for ecs app"
   revoke_rules_on_delete = true
-}
-
-resource "aws_security_group_rule" "ecs_alb_ingress" {
-  type                     = "ingress"
-  from_port                = var.container_port
-  to_port                  = var.container_port
-  protocol                 = "tcp"
-  description              = "Allow inbound traffic from ALB"
-  security_group_id        = aws_security_group.ecs_sg.id
-  source_security_group_id = aws_security_group.alb_sg.id
-}
-
-resource "aws_security_group_rule" "ecs_all_egress" {
-    type                        = "egress"
-    from_port                   = 0
-    to_port                     = 0
-    protocol                    = "-1"
-    description                 = "Allow outbound traffic from ECS"
-    security_group_id           = aws_security_group.ecs_sg.id
-    cidr_blocks                 = ["0.0.0.0/0"] 
+  ingress {
+    from_port       = 0
+    to_port         = 0
+    protocol        = "-1"
+    security_groups = [aws_security_group.alb_sg.id]
+  }
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
 }
 
 resource "aws_security_group" "alb_sg" {
@@ -108,16 +98,18 @@ resource "aws_security_group" "alb_sg" {
   name                   = "sange-sg-alb"
   description            = "Security group for alb"
   revoke_rules_on_delete = true
-}
-
-resource "aws_security_group_rule" "alb_http_ingress" {
-  type              = "ingress"
-  from_port         = var.container_port
-  to_port           = var.container_port
-  protocol          = "tcp"
-  description       = "Allow http inbound traffic from internet"
-  security_group_id = aws_security_group.alb_sg.id
-  cidr_blocks       = ["0.0.0.0/0"]
+  ingress {
+    from_port   = var.container_port
+    to_port     = var.container_port
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"] # Allow traffic in from all sources
+  }
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
 }
 
 resource "aws_iam_role" "ecsTaskExecutionRole" {
