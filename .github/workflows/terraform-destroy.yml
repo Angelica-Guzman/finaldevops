@@ -1,10 +1,6 @@
-name: terraform-apply
+name: terraform-destroy
 
-on:
-  push:
-    branches:
-      - main
-
+on: [workflow_dispatch]
 
 jobs: 
   terraformapply:
@@ -22,7 +18,7 @@ jobs:
       uses: aws-actions/amazon-ecr-login@v1
       with:
         mask-password: 'true'
-    - name: run-terraformapply
+    - name: run-terraformdestroy
       run: |
         terraform init
-        terraform apply -auto-approve
+        terraform destroy -auto-approve
